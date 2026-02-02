@@ -1,0 +1,585 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "core_scene_schema_v0_1.schema.json",
+  "title": "Core Scene Schema v0.1",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "scene",
+    "view",
+    "layout",
+    "ergonomics",
+    "assets",
+    "lighting",
+    "style",
+    "output"
+  ],
+  "errorMessage": {
+    "required": {
+      "scene": "scene is required at the top level.",
+      "view": "view is required at the top level.",
+      "layout": "layout is required at the top level.",
+      "ergonomics": "ergonomics is required at the top level.",
+      "assets": "assets is required at the top level.",
+      "lighting": "lighting is required at the top level.",
+      "style": "style is required at the top level.",
+      "output": "output is required at the top level."
+    }
+  },
+  "properties": {
+    "scene": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "id",
+        "title",
+        "description",
+        "tags",
+        "mood"
+      ],
+      "errorMessage": {
+        "required": {
+          "id": "scene.id is required.",
+          "title": "scene.title is required.",
+          "description": "scene.description is required.",
+          "tags": "scene.tags is required.",
+          "mood": "scene.mood is required."
+        }
+      },
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Stable scene identifier.",
+          "errorMessage": {
+            "type": "scene.id must be a string."
+          }
+        },
+        "title": {
+          "type": "string",
+          "description": "Human-readable scene title.",
+          "errorMessage": {
+            "type": "scene.title must be a string."
+          }
+        },
+        "description": {
+          "type": "string",
+          "description": "Brief scene description.",
+          "errorMessage": {
+            "type": "scene.description must be a string."
+          }
+        },
+        "tags": {
+          "type": "array",
+          "description": "Freeform tags describing the scene.",
+          "items": {
+            "type": "string"
+          },
+          "errorMessage": {
+            "type": "scene.tags must be an array of strings."
+          }
+        },
+        "mood": {
+          "type": "array",
+          "description": "High-level mood descriptors.",
+          "items": {
+            "type": "string"
+          },
+          "errorMessage": {
+            "type": "scene.mood must be an array of strings."
+          }
+        }
+      }
+    },
+    "view": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "type",
+        "variant",
+        "camera_preset"
+      ],
+      "errorMessage": {
+        "required": {
+          "type": "view.type is required.",
+          "variant": "view.variant is required.",
+          "camera_preset": "view.camera_preset is required."
+        }
+      },
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "isometric"
+          ],
+          "description": "View projection type.",
+          "errorMessage": {
+            "enum": "view.type must be one of the known view types.",
+            "type": "view.type must be a string."
+          }
+        },
+        "variant": {
+          "type": "string",
+          "enum": [
+            "fixed"
+          ],
+          "description": "View variant.",
+          "errorMessage": {
+            "enum": "view.variant must be one of the known view variants.",
+            "type": "view.variant must be a string."
+          }
+        },
+        "camera_preset": {
+          "type": "string",
+          "description": "Named camera preset.",
+          "errorMessage": {
+            "type": "view.camera_preset must be a string."
+          }
+        }
+      }
+    },
+    "layout": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "grid",
+        "floors",
+        "zones"
+      ],
+      "errorMessage": {
+        "required": {
+          "grid": "layout.grid is required.",
+          "floors": "layout.floors is required.",
+          "zones": "layout.zones is required."
+        }
+      },
+      "properties": {
+        "grid": {
+          "type": "object",
+          "additionalProperties": true,
+          "required": [
+            "type",
+            "unit",
+            "snap"
+          ],
+          "errorMessage": {
+            "required": {
+              "type": "layout.grid.type is required.",
+              "unit": "layout.grid.unit is required.",
+              "snap": "layout.grid.snap is required."
+            }
+          },
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "logical"
+              ],
+              "description": "Grid type.",
+              "errorMessage": {
+                "enum": "layout.grid.type must be one of the known grid types.",
+                "type": "layout.grid.type must be a string."
+              }
+            },
+            "unit": {
+              "type": "string",
+              "enum": [
+                "meter"
+              ],
+              "description": "Grid unit.",
+              "errorMessage": {
+                "enum": "layout.grid.unit must be one of the known units.",
+                "type": "layout.grid.unit must be a string."
+              }
+            },
+            "snap": {
+              "type": "boolean",
+              "description": "Whether snap-to-grid is enabled.",
+              "errorMessage": {
+                "type": "layout.grid.snap must be a boolean."
+              }
+            }
+          }
+        },
+        "floors": {
+          "type": "array",
+          "description": "Logical floors within the scene.",
+          "items": {
+            "type": "object",
+            "additionalProperties": true,
+            "required": [
+              "id",
+              "active"
+            ],
+            "errorMessage": {
+              "required": {
+                "id": "layout.floors[].id is required.",
+                "active": "layout.floors[].active is required."
+              }
+            },
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Floor identifier.",
+                "errorMessage": {
+                  "type": "layout.floors[].id must be a string."
+                }
+              },
+              "active": {
+                "type": "boolean",
+                "description": "Whether the floor is active.",
+                "errorMessage": {
+                  "type": "layout.floors[].active must be a boolean."
+                }
+              }
+            }
+          },
+          "errorMessage": {
+            "type": "layout.floors must be an array."
+          }
+        },
+        "zones": {
+          "type": "array",
+          "description": "Scene zones with purpose descriptions.",
+          "items": {
+            "type": "object",
+            "additionalProperties": true,
+            "required": [
+              "id",
+              "purpose"
+            ],
+            "errorMessage": {
+              "required": {
+                "id": "layout.zones[].id is required.",
+                "purpose": "layout.zones[].purpose is required."
+              }
+            },
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Zone identifier.",
+                "errorMessage": {
+                  "type": "layout.zones[].id must be a string."
+                }
+              },
+              "purpose": {
+                "type": "string",
+                "description": "Zone purpose.",
+                "errorMessage": {
+                  "type": "layout.zones[].purpose must be a string."
+                }
+              }
+            }
+          },
+          "errorMessage": {
+            "type": "layout.zones must be an array."
+          }
+        }
+      }
+    },
+    "ergonomics": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "scale_profile",
+        "door_height",
+        "stair_rise",
+        "reach",
+        "clutter"
+      ],
+      "errorMessage": {
+        "required": {
+          "scale_profile": "ergonomics.scale_profile is required.",
+          "door_height": "ergonomics.door_height is required.",
+          "stair_rise": "ergonomics.stair_rise is required.",
+          "reach": "ergonomics.reach is required.",
+          "clutter": "ergonomics.clutter is required."
+        }
+      },
+      "properties": {
+        "scale_profile": {
+          "type": "string",
+          "enum": [
+            "human_standard"
+          ],
+          "description": "Ergonomic scale profile.",
+          "errorMessage": {
+            "enum": "ergonomics.scale_profile must be one of the known profiles.",
+            "type": "ergonomics.scale_profile must be a string."
+          }
+        },
+        "door_height": {
+          "type": "string",
+          "enum": [
+            "standard"
+          ],
+          "description": "Door height profile.",
+          "errorMessage": {
+            "enum": "ergonomics.door_height must be one of the known profiles.",
+            "type": "ergonomics.door_height must be a string."
+          }
+        },
+        "stair_rise": {
+          "type": "string",
+          "enum": [
+            "comfortable"
+          ],
+          "description": "Stair rise profile.",
+          "errorMessage": {
+            "enum": "ergonomics.stair_rise must be one of the known profiles.",
+            "type": "ergonomics.stair_rise must be a string."
+          }
+        },
+        "reach": {
+          "type": "string",
+          "enum": [
+            "human_average"
+          ],
+          "description": "Reach profile.",
+          "errorMessage": {
+            "enum": "ergonomics.reach must be one of the known profiles.",
+            "type": "ergonomics.reach must be a string."
+          }
+        },
+        "clutter": {
+          "type": "string",
+          "enum": [
+            "light"
+          ],
+          "description": "Clutter density profile.",
+          "errorMessage": {
+            "enum": "ergonomics.clutter must be one of the known profiles.",
+            "type": "ergonomics.clutter must be a string."
+          }
+        }
+      }
+    },
+    "assets": {
+      "type": "array",
+      "description": "Asset intent entries.",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": [
+          "id",
+          "archetype",
+          "category",
+          "floor",
+          "zone",
+          "state"
+        ],
+        "errorMessage": {
+          "required": {
+            "id": "assets[].id is required.",
+            "archetype": "assets[].archetype is required.",
+            "category": "assets[].category is required.",
+            "floor": "assets[].floor is required.",
+            "zone": "assets[].zone is required.",
+            "state": "assets[].state is required."
+          }
+        },
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Asset instance identifier.",
+            "errorMessage": {
+              "type": "assets[].id must be a string."
+            }
+          },
+          "archetype": {
+            "type": "string",
+            "description": "Asset archetype name.",
+            "errorMessage": {
+              "type": "assets[].archetype must be a string."
+            }
+          },
+          "category": {
+            "type": "string",
+            "description": "Asset category.",
+            "errorMessage": {
+              "type": "assets[].category must be a string."
+            }
+          },
+          "floor": {
+            "type": "string",
+            "description": "Target floor identifier.",
+            "errorMessage": {
+              "type": "assets[].floor must be a string."
+            }
+          },
+          "zone": {
+            "type": "string",
+            "description": "Target zone identifier.",
+            "errorMessage": {
+              "type": "assets[].zone must be a string."
+            }
+          },
+          "state": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "Asset state values.",
+            "errorMessage": {
+              "type": "assets[].state must be an object."
+            }
+          }
+        }
+      },
+      "errorMessage": {
+        "type": "assets must be an array."
+      }
+    },
+    "lighting": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "time_of_day",
+        "key_direction",
+        "contrast",
+        "fog"
+      ],
+      "errorMessage": {
+        "required": {
+          "time_of_day": "lighting.time_of_day is required.",
+          "key_direction": "lighting.key_direction is required.",
+          "contrast": "lighting.contrast is required.",
+          "fog": "lighting.fog is required."
+        }
+      },
+      "properties": {
+        "time_of_day": {
+          "type": "string",
+          "enum": [
+            "dusk"
+          ],
+          "description": "Lighting time of day.",
+          "errorMessage": {
+            "enum": "lighting.time_of_day must be one of the known values.",
+            "type": "lighting.time_of_day must be a string."
+          }
+        },
+        "key_direction": {
+          "type": "string",
+          "enum": [
+            "left"
+          ],
+          "description": "Key light direction.",
+          "errorMessage": {
+            "enum": "lighting.key_direction must be one of the known directions.",
+            "type": "lighting.key_direction must be a string."
+          }
+        },
+        "contrast": {
+          "type": "string",
+          "enum": [
+            "medium"
+          ],
+          "description": "Lighting contrast intent.",
+          "errorMessage": {
+            "enum": "lighting.contrast must be one of the known levels.",
+            "type": "lighting.contrast must be a string."
+          }
+        },
+        "fog": {
+          "type": "string",
+          "enum": [
+            "light"
+          ],
+          "description": "Fog density intent.",
+          "errorMessage": {
+            "enum": "lighting.fog must be one of the known levels.",
+            "type": "lighting.fog must be a string."
+          }
+        }
+      }
+    },
+    "style": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "theme",
+        "overrides"
+      ],
+      "errorMessage": {
+        "required": {
+          "theme": "style.theme is required.",
+          "overrides": "style.overrides is required."
+        }
+      },
+      "properties": {
+        "theme": {
+          "type": "string",
+          "enum": [
+            "storybook_painterly"
+          ],
+          "description": "Style theme identifier.",
+          "errorMessage": {
+            "enum": "style.theme must be one of the known themes.",
+            "type": "style.theme must be a string."
+          }
+        },
+        "overrides": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Theme overrides.",
+          "errorMessage": {
+            "type": "style.overrides must be an object."
+          }
+        }
+      }
+    },
+    "output": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "targets",
+        "resolution",
+        "deterministic"
+      ],
+      "errorMessage": {
+        "required": {
+          "targets": "output.targets is required.",
+          "resolution": "output.resolution is required.",
+          "deterministic": "output.deterministic is required."
+        }
+      },
+      "properties": {
+        "targets": {
+          "type": "array",
+          "description": "Output target interpreters.",
+          "items": {
+            "type": "string",
+            "enum": [
+              "blender",
+              "krita"
+            ]
+          },
+          "errorMessage": {
+            "type": "output.targets must be an array of known target strings.",
+            "items": "output.targets must contain only known target values."
+          }
+        },
+        "resolution": {
+          "type": "array",
+          "description": "Output resolution [width, height].",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "errorMessage": {
+            "type": "output.resolution must be a two-item integer array.",
+            "minItems": "output.resolution must include width and height.",
+            "maxItems": "output.resolution must include only width and height."
+          }
+        },
+        "deterministic": {
+          "type": "boolean",
+          "description": "Whether deterministic output is required.",
+          "errorMessage": {
+            "type": "output.deterministic must be a boolean."
+          }
+        }
+      }
+    }
+  }
+}

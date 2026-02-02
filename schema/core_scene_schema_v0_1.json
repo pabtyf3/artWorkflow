@@ -1,0 +1,100 @@
+{
+  "scene": {
+    "id": "outpost_dusk",
+    "title": "Lonely Outpost at Dusk",
+    "description": "A quiet watchtower overlooking a mountain pass at dusk.",
+    "tags": [
+      "outpost",
+      "dusk",
+      "quiet"
+    ],
+    "mood": [
+      "quiet",
+      "tense"
+    ]
+  },
+  "view": {
+    "type": "isometric",
+    "variant": "fixed",
+    "camera_preset": "default_isometric"
+  },
+  "layout": {
+    "grid": {
+      "type": "logical",
+      "unit": "meter",
+      "snap": true
+    },
+    "floors": [
+      {
+        "id": "ground",
+        "active": true
+      }
+    ],
+    "zones": [
+      {
+        "id": "foreground",
+        "purpose": "player focus"
+      },
+      {
+        "id": "midground",
+        "purpose": "scene structure"
+      },
+      {
+        "id": "background",
+        "purpose": "context"
+      }
+    ]
+  },
+  "ergonomics": {
+    "scale_profile": "human_standard",
+    "door_height": "standard",
+    "stair_rise": "comfortable",
+    "reach": "human_average",
+    "clutter": "light"
+  },
+  "assets": [
+    {
+      "id": "watchtower_01",
+      "archetype": "watchtower",
+      "category": "structure",
+      "floor": "ground",
+      "zone": "midground",
+      "state": {
+        "condition": "weathered",
+        "occupied": false
+      }
+    },
+    {
+      "id": "guard_01",
+      "archetype": "guard",
+      "category": "character",
+      "floor": "ground",
+      "zone": "foreground",
+      "state": {
+        "pose": "idle",
+        "alertness": "low"
+      }
+    }
+  ],
+  "lighting": {
+    "time_of_day": "dusk",
+    "key_direction": "left",
+    "contrast": "medium",
+    "fog": "light"
+  },
+  "style": {
+    "theme": "storybook_painterly",
+    "overrides": {}
+  },
+  "output": {
+    "targets": [
+      "blender",
+      "krita"
+    ],
+    "resolution": [
+      3840,
+      2160
+    ],
+    "deterministic": true
+  }
+}
