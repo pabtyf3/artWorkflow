@@ -1,0 +1,14 @@
+{
+  "scene": {
+    "id": "minimal_scene",
+    "title": "Minimal Scene",
+    "description": "A minimal valid scene for validation.",
+    "tags": ["minimal"],
+    "mood": ["neutral"]
+  },
+  "view": {
+    "type": "text",
+    "variant": "fixed",
+    "camera_preset": "default"
+  }
+}
