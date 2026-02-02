@@ -1,7 +1,16 @@
 import { CoreScene } from "../../validation/zod/coreScene";
 
+/**
+ * Destination scale profiles for resolving symbolic ergonomic intent.
+ * These affect numeric realization only (if/when applied downstream).
+ */
 export type DestinationScale = "neutral" | "meters" | "centimeters";
 
+/**
+ * Deterministic execution plan produced by the dry-run Blender interpreter.
+ * This is a structured, inspectable summary of what a real Blender interpreter
+ * would create, without any side effects or geometry generation.
+ */
 export interface DryRunExecutionPlan {
   sceneOverview: {
     sceneId: string;
@@ -47,6 +56,9 @@ export interface DryRunExecutionPlan {
   warnings: string[];
 }
 
+/**
+ * Default ergonomic intent used when the scene omits `ergonomics`.
+ */
 const DEFAULT_ERGONOMICS = {
   scale_profile: "human_standard",
   door_height: "standard",
@@ -55,6 +67,10 @@ const DEFAULT_ERGONOMICS = {
   clutter: "light",
 } as const;
 
+/**
+ * Known ergonomic symbolic values supported by this interpreter.
+ * Unknown values will generate warnings and fall back to defaults.
+ */
 const KNOWN_ERGONOMICS = {
   scale_profile: ["human_standard", "human_compact", "human_large"],
   door_height: ["low", "standard", "tall"],
@@ -63,6 +79,9 @@ const KNOWN_ERGONOMICS = {
   clutter: ["none", "light", "medium", "heavy"],
 } as const;
 
+/**
+ * Returns true if the provided value is among the allowed symbols.
+ */
 const isKnownValue = (
   value: string,
   allowed: readonly string[]
@@ -70,6 +89,15 @@ const isKnownValue = (
   return allowed.includes(value);
 };
 
+/**
+ * Build a deterministic, inspectable execution plan for a validated Core Scene.
+ *
+ * Notes:
+ * - The input is assumed to be validated by Zod beforehand.
+ * - The input object is never mutated.
+ * - The output plan is stable for the same inputs and options.
+ * - No Blender APIs, filesystem IO, or side effects are used.
+ */
 export function dryRunBlenderInterpreter(
   scene: CoreScene,
   options?: {
