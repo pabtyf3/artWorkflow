@@ -1,0 +1,18 @@
+{
+  "name": "artworkflow-validation",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Zod-based validation for Core Scene Schema v0.1.",
+  "license": "UNLICENSED",
+  "type": "commonjs",
+  "dependencies": {
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.5"
+  },
+  "scripts": {
+    "validate": "ts-node tools/cli.ts"
+  }
+}
