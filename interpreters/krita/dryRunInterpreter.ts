@@ -1,4 +1,7 @@
+import { readFileSync } from "fs";
+import { resolve } from "path";
 import { CoreScene } from "../../validation/zod/coreScene";
+import { KritaTheme, validateKritaTheme } from "../../validation/zod/kritaTheme";
 
 export interface KritaDryRunWorkspacePlan {
   documentOverview: {
@@ -29,8 +32,12 @@ export interface KritaDryRunWorkspacePlan {
   }>;
   styleThemePlan: {
     theme: string | null;
+    version: string | null;
     loadedResources: string[];
     scope: string;
+    appliedOverrides: string[];
+    ignoredOverrides: string[];
+    warnings: string[];
     notes: string[];
   };
   lightingMoodPlan: {
@@ -46,7 +53,75 @@ export interface KritaDryRunWorkspacePlan {
   warnings: string[];
 }
 
-const KNOWN_THEMES = ["storybook_painterly"] as const;
+type ResolvedTheme = {
+  theme: KritaTheme | null;
+  loadedResources: string[];
+  warnings: string[];
+};
+
+const loadThemeFromDisk = (themeId: string): ResolvedTheme => {
+  const warnings: string[] = [];
+  const themePath = resolve(
+    process.cwd(),
+    "styles",
+    "themes",
+    themeId,
+    "theme.json"
+  );
+
+  let raw: string;
+  try {
+    raw = readFileSync(themePath, "utf-8");
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    warnings.push(`Theme not found: ${themeId}. ${message}`);
+    return { theme: null, loadedResources: [], warnings };
+  }
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    warnings.push(`Theme JSON invalid for ${themeId}: ${message}`);
+    return { theme: null, loadedResources: [], warnings };
+  }
+
+  const validation = validateKritaTheme(parsed);
+  if (!validation.ok) {
+    warnings.push(`Theme validation failed for ${themeId}.`);
+    return { theme: null, loadedResources: [], warnings };
+  }
+
+  if (validation.data.target !== "krita") {
+    warnings.push(`Theme target mismatch for ${themeId}: ${validation.data.target}.`);
+    return { theme: null, loadedResources: [], warnings };
+  }
+
+  const loadedResources: string[] = [];
+  if (validation.data.tools?.brush_presets) {
+    loadedResources.push(...validation.data.tools.brush_presets);
+  }
+  if (validation.data.tools?.erasers) {
+    loadedResources.push(...validation.data.tools.erasers);
+  }
+  if (validation.data.tools?.blending_modes) {
+    loadedResources.push(...validation.data.tools.blending_modes);
+  }
+  if (validation.data.colour_guidance?.palette) {
+    loadedResources.push(validation.data.colour_guidance.palette);
+  }
+  if (validation.data.texture_guidance?.allowed) {
+    loadedResources.push(...validation.data.texture_guidance.allowed);
+  }
+
+  return { theme: validation.data, loadedResources, warnings };
+};
+
+const describeOverride = (path: string, value: unknown): string => {
+  const renderedValue = typeof value === "string" ? value : JSON.stringify(value);
+  return `${path}=${renderedValue}`;
+};
 
 /**
  * Build a deterministic, inspectable workspace plan for Krita without side effects.
@@ -140,25 +215,68 @@ export function dryRunKritaInterpreter(
     };
   });
 
-  const styleTheme = scene.style?.theme ?? null;
+  const styleThemeId = scene.style?.theme ?? null;
   const styleNotes: string[] = [];
-  if (!styleTheme) {
+  const styleWarnings: string[] = [];
+  const appliedOverrides: string[] = [];
+  const ignoredOverrides: string[] = [];
+
+  let resolvedTheme: KritaTheme | null = null;
+  let loadedResources: string[] = [];
+
+  if (!styleThemeId) {
     styleNotes.push("No style.theme provided; using neutral defaults.");
-    warnings.push("Missing style.theme; using neutral tool availability.");
-  } else if (!KNOWN_THEMES.includes(styleTheme as typeof KNOWN_THEMES[number])) {
-    warnings.push(`Unsupported style theme: ${styleTheme}. Using neutral defaults.`);
-    styleNotes.push("Theme is unsupported; no theme resources loaded.");
+    styleWarnings.push("Missing style.theme; using neutral tool availability.");
+  } else {
+    const resolved = loadThemeFromDisk(styleThemeId);
+    resolvedTheme = resolved.theme;
+    loadedResources = resolved.loadedResources;
+    if (resolved.warnings.length > 0) {
+      styleWarnings.push(...resolved.warnings);
+    }
+    if (!resolvedTheme) {
+      styleNotes.push("Theme could not be resolved; using neutral defaults.");
+    }
+  }
+
+  const overrides = scene.style?.overrides ?? {};
+  if (resolvedTheme) {
+    for (const [path, value] of Object.entries(overrides)) {
+      const segments = path.split(".");
+      if (segments.length !== 2) {
+        ignoredOverrides.push(describeOverride(path, value));
+        styleWarnings.push(`Ignored override (invalid path): ${path}.`);
+        continue;
+      }
+      const [section, field] = segments;
+      const sectionValue = (resolvedTheme as Record<string, unknown>)[section];
+      if (!sectionValue || typeof sectionValue !== "object") {
+        ignoredOverrides.push(describeOverride(path, value));
+        styleWarnings.push(`Ignored override (unknown section): ${path}.`);
+        continue;
+      }
+      if (!(field in (sectionValue as Record<string, unknown>))) {
+        ignoredOverrides.push(describeOverride(path, value));
+        styleWarnings.push(`Ignored override (unknown field): ${path}.`);
+        continue;
+      }
+      appliedOverrides.push(describeOverride(path, value));
+    }
+  } else if (Object.keys(overrides).length > 0) {
+    for (const [path, value] of Object.entries(overrides)) {
+      ignoredOverrides.push(describeOverride(path, value));
+    }
+    styleWarnings.push("Scene overrides ignored because no valid theme is loaded.");
   }
 
   const styleThemePlan = {
-    theme: styleTheme && KNOWN_THEMES.includes(styleTheme as typeof KNOWN_THEMES[number])
-      ? styleTheme
-      : null,
-    loadedResources:
-      styleTheme && KNOWN_THEMES.includes(styleTheme as typeof KNOWN_THEMES[number])
-        ? ["brush presets", "colour palettes", "texture sets"]
-        : [],
+    theme: resolvedTheme?.id ?? null,
+    version: resolvedTheme?.version ?? null,
+    loadedResources,
     scope: "Resources are made available only; no automatic application.",
+    appliedOverrides,
+    ignoredOverrides,
+    warnings: styleWarnings,
     notes: styleNotes,
   };
 
