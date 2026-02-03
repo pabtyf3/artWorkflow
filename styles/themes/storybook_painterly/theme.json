@@ -1,0 +1,53 @@
+{
+  "id": "storybook_painterly",
+  "name": "Storybook Painterly",
+  "version": "1.0.0",
+  "description": "Soft, illustrative, painterly style suitable for narrative-driven scenes and story-focused games.",
+  "target": "krita",
+  "tools": {
+    "brush_presets": [
+      "soft_round",
+      "dry_brush",
+      "chalk",
+      "painterly_texture"
+    ],
+    "erasers": [
+      "soft_eraser"
+    ],
+    "blending_modes": [
+      "normal",
+      "multiply",
+      "overlay"
+    ]
+  },
+  "colour_guidance": {
+    "palette": "storybook_warm",
+    "value_range": "mid",
+    "contrast": "low_to_medium",
+    "saturation": "moderate"
+  },
+  "texture_guidance": {
+    "allowed": [
+      "paper_grain",
+      "canvas_soft"
+    ],
+    "usage_notes": "Textures should remain subtle and support hand-painted strokes rather than dominate them."
+  },
+  "workflow_hints": {
+    "preferred_layers": [
+      "Background",
+      "Midground",
+      "Foreground",
+      "Lighting"
+    ],
+    "separate_lighting": true,
+    "notes": "Encourage keeping lighting separate for flexible paint-over adjustments."
+  },
+  "restrictions": {
+    "disallowed_tools": [
+      "hard_round",
+      "photo_textures"
+    ],
+    "notes": "Avoid sharp edges and photographic textures to maintain an illustrative feel."
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "id": "noir_minimal",
+  "name": "Noir Minimal",
+  "version": "1.0.0",
+  "description": "High-contrast, restrained theme focused on minimal texture and clear lighting separation.",
+  "target": "krita",
+  "tools": {
+    "brush_presets": [
+      "hard_round",
+      "soft_round",
+      "ink_line"
+    ],
+    "erasers": [
+      "hard_eraser",
+      "soft_eraser"
+    ],
+    "blending_modes": [
+      "normal",
+      "multiply"
+    ]
+  },
+  "colour_guidance": {
+    "palette": "noir_limited",
+    "value_range": "high",
+    "contrast": "high",
+    "saturation": "low"
+  },
+  "texture_guidance": {
+    "allowed": [
+      "paper_grain_subtle"
+    ],
+    "usage_notes": "Textures should remain minimal and never compete with value contrast."
+  },
+  "workflow_hints": {
+    "preferred_layers": [
+      "Background",
+      "Midground",
+      "Foreground",
+      "Lighting"
+    ],
+    "separate_lighting": true,
+    "notes": "Keep lighting guides separate to preserve hard value separation."
+  },
+  "restrictions": {
+    "disallowed_tools": [
+      "painterly_texture",
+      "smudge",
+      "photo_textures"
+    ],
+    "notes": "Avoid softening tools and heavy textures to maintain crisp silhouettes."
+  }
+}
