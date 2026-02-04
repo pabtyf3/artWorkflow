@@ -24,6 +24,9 @@ export type PrefabGenerationResult =
         summary: string;
         artefactIds: string[];
         notes: string[];
+        scripts?: {
+          blenderPython?: string;
+        };
       };
     }
   | {
