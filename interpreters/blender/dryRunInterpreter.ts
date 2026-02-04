@@ -1,3 +1,6 @@
+import type { ZodIssue } from "zod";
+import type { ResolvedAssetRegistry } from "../../assets/registry/loadAssetRegistry";
+import { loadAssetRegistry, getAssetById } from "../../assets/registry/loadAssetRegistry";
 import { CoreScene } from "../../validation/zod/coreScene";
 
 /**
@@ -53,6 +56,24 @@ export interface DryRunExecutionPlan {
   lightingPlan: {
     summary: string[];
   };
+  assetResolutionSummary: {
+    resolved: Array<{
+      assetId: string;
+      archetype: string;
+      supportedDetailTiers: string[];
+      supportedVariants: string[];
+      prefabPlan: {
+        prefabKey: string;
+        detailTier: string;
+        variant: string;
+        notes: string[];
+      };
+    }>;
+    unresolved: Array<{
+      assetId: string;
+      reason: string;
+    }>;
+  };
   warnings: string[];
 }
 
@@ -89,6 +110,20 @@ const isKnownValue = (
   return allowed.includes(value);
 };
 
+const formatIssuePath = (path: (string | number)[]): string => {
+  if (path.length === 0) {
+    return "<root>";
+  }
+  return path
+    .map((segment) => (typeof segment === "number" ? `[${segment}]` : segment))
+    .join(".")
+    .replace(".[", "[");
+};
+
+const formatRegistryIssue = (issue: ZodIssue): string => {
+  return `${formatIssuePath(issue.path)}: ${issue.message}`;
+};
+
 /**
  * Build a deterministic, inspectable execution plan for a validated Core Scene.
  *
@@ -107,6 +142,34 @@ export function dryRunBlenderInterpreter(
   const destinationScale = options?.destinationScale ?? "neutral";
   const warnings: string[] = [];
   const fallbackNotes: string[] = [];
+  // Asset registry awareness is optional; failures degrade to warnings only.
+  let registryAvailable = false;
+  let resolvedRegistry: ResolvedAssetRegistry | null = null;
+
+  try {
+    const registryResult = loadAssetRegistry();
+    if (registryResult.ok) {
+      registryAvailable = true;
+      resolvedRegistry = registryResult.registry;
+      if (registryResult.warnings.length > 0) {
+        warnings.push(
+          ...registryResult.warnings.map((warning) => `Asset registry warning: ${warning}`)
+        );
+      }
+    } else {
+      warnings.push(
+        `Asset registry validation failed (${registryResult.issues.length} issues); asset awareness disabled.`
+      );
+      warnings.push(
+        ...registryResult.issues.map(
+          (issue) => `Asset registry issue: ${formatRegistryIssue(issue)}`
+        )
+      );
+    }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    warnings.push(`Asset registry load failed: ${message}. Asset awareness disabled.`);
+  }
 
   const ergonomics = scene.ergonomics;
   const resolvedErgonomics = {
@@ -228,6 +291,75 @@ export function dryRunBlenderInterpreter(
     };
   });
 
+  const assetResolutionSummary: DryRunExecutionPlan["assetResolutionSummary"] = {
+    resolved: [],
+    unresolved: [],
+  };
+
+  for (const asset of scene.assets ?? []) {
+    if (!registryAvailable || !resolvedRegistry) {
+      assetResolutionSummary.unresolved.push({
+        assetId: asset.id,
+        reason: "Asset registry unavailable; resolution skipped.",
+      });
+      continue;
+    }
+
+    const registryAsset = getAssetById(resolvedRegistry, asset.id);
+    if (!registryAsset) {
+      warnings.push(`Unresolved asset reference: ${asset.id}.`);
+      assetResolutionSummary.unresolved.push({
+        assetId: asset.id,
+        reason: "Asset id not found in registry.",
+      });
+      continue;
+    }
+
+    if (registryAsset.supported_detail_tiers.length === 0) {
+      warnings.push(
+        `Asset ${asset.id} has no supported detail tiers; prefab planning skipped.`
+      );
+      assetResolutionSummary.unresolved.push({
+        assetId: asset.id,
+        reason: "No supported detail tiers available for prefab planning.",
+      });
+      continue;
+    }
+
+    if (registryAsset.supported_variants.length === 0) {
+      warnings.push(
+        `Asset ${asset.id} has no supported variants; prefab planning skipped.`
+      );
+      assetResolutionSummary.unresolved.push({
+        assetId: asset.id,
+        reason: "No supported variants available for prefab planning.",
+      });
+      continue;
+    }
+
+    // Deterministic placeholder rule: choose first listed tier/variant in registry order.
+    const selectedDetailTier = registryAsset.supported_detail_tiers[0];
+    const selectedVariant = registryAsset.supported_variants[0];
+    const prefabKey = `${asset.id}::${selectedDetailTier}::${selectedVariant}`;
+
+    assetResolutionSummary.resolved.push({
+      assetId: asset.id,
+      archetype: registryAsset.archetype,
+      supportedDetailTiers: registryAsset.supported_detail_tiers,
+      supportedVariants: registryAsset.supported_variants,
+      prefabPlan: {
+        prefabKey,
+        detailTier: selectedDetailTier,
+        variant: selectedVariant,
+        notes: [
+          "Prefab selection is provisional and ordering-based.",
+          "First supported detail tier/variant chosen as a temporary placeholder.",
+          "No geometry or Blender assets are generated in dry-run.",
+        ],
+      },
+    });
+  }
+
   const pathPlans: DryRunExecutionPlan["pathPlans"] = [];
 if ((scene.assets ?? []).some(a => a.category === "road" || a.category === "water")) {
   warnings.push(
@@ -287,6 +419,7 @@ if ((scene.assets ?? []).some(a => a.category === "road" || a.category === "wate
     lightingPlan: {
       summary: lightingSummary,
     },
+    assetResolutionSummary,
     warnings,
   };
 }
