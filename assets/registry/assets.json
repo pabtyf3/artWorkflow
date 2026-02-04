@@ -1,0 +1,31 @@
+{
+  "registry_version": "0.1.0",
+  "archetypes": [
+    {
+      "id": "furniture.chair",
+      "category": "furniture",
+      "description": "A seat designed for one person.",
+      "structural_parts": [
+        "legs",
+        "seat",
+        "back"
+      ],
+        "notes": "Baseline chair archetype used for early testing."
+
+    }
+  ],
+  "assets": [
+    {
+      "asset_id": "chair_simple",
+      "archetype": "furniture.chair",
+      "supported_detail_tiers": [
+        "basic"
+      ],
+      "supported_variants": [
+        "wooden"
+      ],
+      "description": "A simple, utilitarian chair.",
+      "notes": "Intended as the first proof-of-concept asset."
+    }
+  ]
+}
