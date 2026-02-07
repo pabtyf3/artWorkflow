@@ -1,23 +1,45 @@
 {
   "registry_version": "0.1.0",
+  "parts": [
+    {
+      "id": "supports",
+      "description": "Load-bearing elements such as legs or posts."
+    },
+    {
+      "id": "seat",
+      "description": "Primary seating surface."
+    },
+    {
+      "id": "back",
+      "description": "Back support element."
+    }
+  ],
   "archetypes": [
     {
       "id": "furniture.chair",
       "category": "furniture",
       "description": "A seat designed for one person.",
-      "structural_parts": [
-        "legs",
+      "allowed_parts": [
+        "supports",
         "seat",
         "back"
       ],
-        "notes": "Baseline chair archetype used for early testing."
-
+      "supported_detail_tiers": [
+        "basic"
+      ],
+      "notes": "Baseline chair archetype used for early testing."
     }
   ],
   "assets": [
     {
-      "asset_id": "chair_simple",
+      "asset_id": "assets.furniture.chair_simple",
+      "category": "furniture",
       "archetype": "furniture.chair",
+      "allowed_parts": [
+        "supports",
+        "seat",
+        "back"
+      ],
       "supported_detail_tiers": [
         "basic"
       ],

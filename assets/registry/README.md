@@ -18,6 +18,7 @@ requires only:
 - one asset
 - one detail tier
 - one variant
+- one part set
 
 New entries should only be added after existing entries can be:
 - defined
@@ -29,7 +30,8 @@ New entries should only be added after existing entries can be:
 ## How Interpreters Use the Registry
 
 Interpreters are expected to:
-- resolve `asset_id` to a known archetype
+- resolve `asset_id` (format: `assets.<category>.<identity>`) to a known archetype
+- read reusable `parts` definitions for structural context
 - respect supported detail tiers and variants
 - treat the registry as read-only
 

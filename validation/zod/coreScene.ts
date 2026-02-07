@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { assetIdSchema } from "./assetSystem";
 
 export const coreSceneSchema = z
   .object({
@@ -83,7 +84,7 @@ export const coreSceneSchema = z
       .array(
         z
           .object({
-            id: z.string().describe("Asset instance identifier."),
+            id: assetIdSchema.describe("Canonical asset identifier."),
             archetype: z.string().describe("Asset archetype name."),
             category: z.string().describe("Asset category."),
             floor: z.string().describe("Target floor identifier."),

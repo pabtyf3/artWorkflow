@@ -172,7 +172,7 @@ const runPrefabGeneration = (filePath: string): void => {
     );
   } else {
     warnings.push(
-      `Asset registry validation failed (${registryResult.issues.length} issues); structural parts unavailable.`
+      `Asset registry validation failed (${registryResult.issues.length} issues); part data unavailable.`
     );
   }
 
@@ -182,7 +182,7 @@ const runPrefabGeneration = (filePath: string): void => {
 
   for (const resolved of resolvedPrefabs) {
     const structuralParts =
-      archetypesById?.get(resolved.archetype)?.structural_parts ?? [];
+      archetypesById?.get(resolved.archetype)?.allowed_parts ?? [];
 
     const input: PrefabGenerationInput = {
       prefabKey: resolved.prefabPlan.prefabKey,

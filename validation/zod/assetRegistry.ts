@@ -1,38 +1,17 @@
 import { z } from "zod";
+import {
+  archetypeDefinitionSchema,
+  assetDefinitionSchema,
+  partDefinitionSchema,
+} from "./assetSystem";
 
 /**
  * Schema for validating the Asset Registry JSON file.
- * Enforces required identity and semantic fields while allowing forward-compatible extensions.
+ * Enforces semantic identity while allowing forward-compatible extensions.
  */
-const archetypeSchema = z
-  .object({
-    id: z.string().describe("Archetype identifier."),
-    category: z.string().describe("Archetype category."),
-    description: z.string().describe("Archetype description."),
-    structural_parts: z
-      .array(z.string())
-      .nonempty()
-      .describe("Semantic structural parts."),
-    notes: z.string().optional().describe("Optional archetype notes."),
-  })
-  .passthrough();
-
-const assetSchema = z
-  .object({
-    asset_id: z.string().describe("Asset identifier."),
-    archetype: z.string().describe("Referenced archetype identifier."),
-    supported_detail_tiers: z
-      .array(z.string())
-      .nonempty()
-      .describe("Supported detail tiers."),
-    supported_variants: z
-      .array(z.string())
-      .nonempty()
-      .describe("Supported variants."),
-    description: z.string().describe("Asset description."),
-    notes: z.string().optional().describe("Optional asset notes."),
-  })
-  .passthrough();
+const archetypeSchema = archetypeDefinitionSchema;
+const assetSchema = assetDefinitionSchema;
+const partSchema = partDefinitionSchema;
 
 export const assetRegistrySchema = z
   .object({
@@ -40,12 +19,51 @@ export const assetRegistrySchema = z
       .string()
       .regex(/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/)
       .describe("Registry version (semver-like)."),
+    parts: z.array(partSchema).describe("Reusable semantic part definitions."),
     archetypes: z.array(archetypeSchema).describe("Archetype definitions."),
     assets: z.array(assetSchema).describe("Asset definitions."),
   })
-  .passthrough();
+  .passthrough()
+  // Enforce semantic truth: assets can only use known parts supported by their archetype.
+  .superRefine((registry, ctx) => {
+    const partsById = new Set(registry.parts.map((part) => part.id));
+    const archetypesById = new Map(
+      registry.archetypes.map((archetype) => [archetype.id, archetype])
+    );
+
+    registry.assets.forEach((asset, assetIndex) => {
+      const archetype = archetypesById.get(asset.archetype);
+      if (!archetype) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["assets", assetIndex, "archetype"],
+          message: `Unknown archetype "${asset.archetype}" for asset "${asset.asset_id}".`,
+        });
+      }
+
+      asset.allowed_parts.forEach((partId, partIndex) => {
+        if (!partsById.has(partId)) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ["assets", assetIndex, "allowed_parts", partIndex],
+            message: `Unknown part "${partId}" in asset "${asset.asset_id}".`,
+          });
+        }
+
+        if (archetype && !archetype.allowed_parts.includes(partId)) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ["assets", assetIndex, "allowed_parts", partIndex],
+            message:
+              `Part "${partId}" is not supported by archetype "${asset.archetype}".`,
+          });
+        }
+      });
+    });
+  });
 
 export type AssetRegistry = z.infer<typeof assetRegistrySchema>;
+export type AssetRegistryPart = z.infer<typeof partSchema>;
 export type AssetRegistryArchetype = z.infer<typeof archetypeSchema>;
 export type AssetRegistryAsset = z.infer<typeof assetSchema>;
 

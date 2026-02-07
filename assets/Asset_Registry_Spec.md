@@ -63,14 +63,30 @@ An **archetype** defines a semantic structural pattern.
 
 Examples:
 - `furniture.chair`
-- `architecture.door`
+- `structure.door`
 - `infrastructure.lamppost`
 
 Archetypes:
 - define structural expectations
-- describe compositional parts (e.g. legs, back, seat)
+- describe compositional parts by reference (e.g. supports, back, seat)
 - never reference geometry primitives
 - never include material or texture data
+
+---
+
+## Parts
+
+Parts are reusable semantic components referenced by archetypes and assets.
+
+Examples:
+- `supports`
+- `seat`
+- `back`
+
+Parts:
+- are defined once in the registry
+- are reused across archetypes
+- do not expose geometry or tool data
 
 ---
 
@@ -79,12 +95,13 @@ Archetypes:
 An **asset** is a concrete, reusable instance of an archetype.
 
 Examples:
-- `chair_simple`
-- `chair_ornate`
-- `door_wooden_standard`
+- `assets.furniture.chair_simple`
+- `assets.furniture.chair_ornate`
+- `assets.structure.door_single`
 
 Assets:
 - reference exactly one archetype
+- include a bounded list of allowed parts
 - define supported variants and detail tiers
 - are the unit used by scenes and interpreters
 
@@ -143,6 +160,18 @@ Asset generation logic:
 - lives downstream of the registry
 - must not introduce new semantics
 - must not be required for validation or dry-runs
+
+---
+
+## Archetype Generator Contract
+
+The semantic contract for archetype generators lives at:
+`assets/types/archetypeContract.ts`.
+
+It defines:
+- required semantic inputs
+- allowed parts and supported detail tiers
+- abstract (tool-agnostic) outputs
 
 ---
 
