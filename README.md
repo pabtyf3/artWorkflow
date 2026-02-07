@@ -205,6 +205,27 @@ If something cannot be clearly documented, it is likely the wrong abstraction.
 
 ---
 
+## Contributor Setup
+
+### Node Version
+
+This repo targets Node 22.
+
+If you use nvm:
+
+```bash
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+```
+
+Then:
+
+```bash
+nvm install
+nvm use
+```
+
+---
+
 ## Who This Is For
 
 artWorkflow is especially useful if you:

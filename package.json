@@ -9,10 +9,17 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@types/jest": "^29.5.12",
+    "jest": "^29.7.0",
     "ts-node": "^10.9.2",
+    "ts-jest": "^29.1.2",
     "typescript": "^5.4.5"
   },
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
-    "validate": "ts-node tools/cli.ts"
+    "validate": "ts-node tools/cli.ts",
+    "test": "jest"
   }
 }
