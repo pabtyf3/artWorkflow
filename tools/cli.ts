@@ -1,11 +1,11 @@
 import { readFileSync } from "fs";
 import { resolve } from "path";
-import type { PrefabGenerationInput } from "../interpreters/blender/types/prefabGenerator";
+import type { PrefabGenerationInput } from "../interpreters/blender/dry-run/types/prefabGenerator";
 import { assertValidCoreScene } from "../validation/zod/validateScene";
 import { loadAssetRegistry } from "../assets/registry/loadAssetRegistry";
-import { dryRunBlenderInterpreter } from "../interpreters/blender/dryRunInterpreter";
+import { dryRunBlenderInterpreter } from "../interpreters/blender/dry-run/dryRunInterpreter";
 import { dryRunKritaInterpreter } from "../interpreters/krita/dryRunInterpreter";
-import { generatePrefab } from "../interpreters/blender/generators/dispatch";
+import { generatePrefab } from "../interpreters/blender/dry-run/generators/dispatch";
 
 const printUsage = (): void => {
   console.error("Usage:");

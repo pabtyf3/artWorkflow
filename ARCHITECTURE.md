@@ -84,7 +84,7 @@ Resolution happens during planning.
 ### 3. Dry-run interpreters
 
 **Locations:**
-- `interpreters/blender/dryRunInterpreter.ts`
+- `interpreters/blender/dry-run/dryRunInterpreter.ts`
 - `interpreters/krita/dryRunInterpreter.ts`
 
 Dry-run interpreters:
@@ -125,7 +125,7 @@ This is still planning.
 
 ### 5. Prefab → Generator contract
 
-**Location:** `interpreters/blender/types/prefabGenerator.ts`
+**Location:** `interpreters/blender/dry-run/types/prefabGenerator.ts`
 
 This contract defines the boundary between planning and generation.
 
@@ -146,7 +146,7 @@ This makes generators testable and inspectable.
 
 ### 6. Generator dispatch
 
-**Location:** `interpreters/blender/generators/dispatch.ts`
+**Location:** `interpreters/blender/dry-run/generators/dispatch.ts`
 
 The dispatch layer:
 - Is the **only place** that knows which generators exist
@@ -161,7 +161,7 @@ This prevents accidental coupling and hidden dependencies.
 
 ### 7. Concrete generators
 
-**Location:** `interpreters/blender/generators/`
+**Location:** `interpreters/blender/dry-run/generators/`
 
 Each generator:
 - Handles one archetype + tier + variant combination

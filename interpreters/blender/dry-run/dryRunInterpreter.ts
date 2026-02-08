@@ -1,7 +1,10 @@
 import type { ZodIssue } from "zod";
-import type { ResolvedAssetRegistry } from "../../assets/registry/loadAssetRegistry";
-import { loadAssetRegistry, getAssetById } from "../../assets/registry/loadAssetRegistry";
-import { CoreScene } from "../../validation/zod/coreScene";
+import type { ResolvedAssetRegistry } from "../../../assets/registry/loadAssetRegistry";
+import {
+  loadAssetRegistry,
+  getAssetById,
+} from "../../../assets/registry/loadAssetRegistry";
+import { CoreScene } from "../../../validation/zod/coreScene";
 
 /**
  * Destination scale profiles for resolving symbolic ergonomic intent.
