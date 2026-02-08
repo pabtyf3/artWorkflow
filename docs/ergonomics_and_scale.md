@@ -49,9 +49,14 @@ TypeScript owns all decisions relating to:
 
 Archetype generators:
 
-* import ergonomic helpers
-* resolve intent into concrete dimensions
-* emit deterministic, Blender‑ready parameters
+* emit semantic intent only
+* avoid geometry or physical dimensions
+
+Ergonomic resolution:
+
+* consumes semantic intent
+* applies reference body measurements
+* emits deterministic, physical dimensions for adapters
 
 This layer answers:
 

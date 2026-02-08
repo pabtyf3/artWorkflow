@@ -33,4 +33,8 @@ export interface AdapterInput {
    * Generated semantic parts keyed by part identity.
    */
   parts: Record<string, GeneratedPartDescriptor>;
+  /**
+   * Optional physical resolution payload (opaque to adapters).
+   */
+  physical?: unknown;
 }

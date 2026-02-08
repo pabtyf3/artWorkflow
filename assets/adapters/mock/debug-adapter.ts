@@ -5,6 +5,7 @@ export type DebugAdapterSummary = {
   archetype: string;
   detailTier: string;
   parts: Array<{ id: string; kind: string }>;
+  physical?: unknown;
 };
 
 const normalizeParts = (
@@ -18,12 +19,25 @@ const normalizeParts = (
  * Deterministic, human-readable summary of an adapter input.
  * Uses only opaque fields and explicit key ordering.
  */
-export const debugAdapterSummary = (input: AdapterInput): DebugAdapterSummary => ({
-  assetId: input.assetId,
-  archetype: input.archetype,
-  detailTier: input.detailTier,
-  parts: normalizeParts(input.parts),
-});
+export const debugAdapterSummary = (input: AdapterInput): DebugAdapterSummary => {
+  const summary: DebugAdapterSummary = {
+    assetId: input.assetId,
+    archetype: input.archetype,
+    detailTier: input.detailTier,
+    parts: normalizeParts(input.parts),
+  };
+
+  if (
+    (input.archetype === "chair" ||
+      input.archetype === "table" ||
+      input.archetype === "bed") &&
+    input.physical
+  ) {
+    summary.physical = input.physical;
+  }
+
+  return summary;
+};
 
 /**
  * Deterministic ASCII output for quick inspection.
@@ -35,6 +49,14 @@ export const debugAdapterAscii = (input: AdapterInput): string => {
     `detailTier: ${input.detailTier}`,
     "parts:",
   ];
+  if (
+    (input.archetype === "chair" ||
+      input.archetype === "table" ||
+      input.archetype === "bed") &&
+    input.physical
+  ) {
+    lines.push(`physical: ${JSON.stringify(input.physical)}`);
+  }
 
   for (const part of normalizeParts(input.parts)) {
     lines.push(`- ${part.id} (${part.kind})`);

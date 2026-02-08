@@ -7,4 +7,7 @@ this folder.
 
 The ergonomics definitions here are deterministic and canonical.
 
+Physical resolution helpers in this module convert semantic intent into
+absolute, deterministic dimensions for adapter inputs.
+
 see ../../docs/ergonomics_and_scale.md for more info
