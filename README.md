@@ -180,6 +180,20 @@ Runs Blender dry‑run first and feeds the result into the Krita dry‑run inter
 
 ---
 
+## Blender Chair Generation
+
+Generate a chair with ergonomics applied via Blender (background mode):
+
+```bash
+npm run render:chair
+```
+
+Outputs:
+- `chair_input.json`
+- `chair_output.blend`
+
+---
+
 ## Governance & AI Usage
 
 This repository includes an **AGENTS.md** file which defines:

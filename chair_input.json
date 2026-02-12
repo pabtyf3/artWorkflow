@@ -1,0 +1,27 @@
+{
+  "assetId": "assets.furniture.chair_simple",
+  "archetype": "chair",
+  "detailTier": "basic",
+  "parts": {
+    "supports": {
+      "kind": "supports"
+    },
+    "seat": {
+      "kind": "seat"
+    },
+    "back": {
+      "kind": "back"
+    }
+  },
+  "physical": {
+    "seatHeight": 0.437,
+    "seatDepth": 0.45,
+    "seatWidth": 0.55,
+    "backHeight": 0.563,
+    "totalHeight": 1,
+    "footprint": {
+      "width": 0.63,
+      "depth": 0.53
+    }
+  }
+}

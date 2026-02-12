@@ -26,6 +26,7 @@ PART_OBJECT_COUNTS = {
     "supports": 4,
 }
 
+APPLY_ERGONOMICS = True
 TOLERANCE = 0.02
 DEBUG_ASSERT = False
 DEBUG_ASSERT_TOLERANCE = 0.005
@@ -106,39 +107,36 @@ def _check_ergonomics(
     input_dict: Mapping[str, object],
     collection: "bpy.types.Collection",
 ) -> None:
+    asset_id = input_dict.get("assetId")
     if input_dict.get("archetype") != "chair":
         return
     physical = input_dict.get("physical")
     if not isinstance(physical, Mapping):
         return
 
-    collection_bounds = _collection_bounds(collection)
-    if collection_bounds is None:
-        return
-    min_x, max_x, min_y, max_y, min_z, max_z = collection_bounds
-    seat_bounds = _part_bounds(collection, "seat")
-    if seat_bounds is None:
-        return
-    _, _, _, _, seat_min_z, seat_max_z = seat_bounds
-
-    # Seat height is measured as the top of the seat surface relative to floor (min Z).
-    measured = {
-        "seatHeight": seat_max_z - min_z,
-        "totalHeight": max_z - min_z,
-        "footprint": {
-            "width": max_x - min_x,
-            "depth": max_y - min_y,
-        },
-    }
+    def _measure_chair() -> Optional[Mapping[str, object]]:
+        collection_bounds = _collection_bounds(collection)
+        if collection_bounds is None:
+            return None
+        min_x, max_x, min_y, max_y, min_z, max_z = collection_bounds
+        seat_bounds = _part_bounds(collection, "seat")
+        if seat_bounds is None:
+            return None
+        _, _, _, _, _seat_min_z, seat_max_z = seat_bounds
+        # Seat height is measured as the top of the seat surface relative to floor (min Z).
+        return {
+            "seatHeight": seat_max_z - min_z,
+            "totalHeight": max_z - min_z,
+            "footprint": {
+                "width": max_x - min_x,
+                "depth": max_y - min_y,
+            },
+        }
 
     declared = physical
     declared_seat_height = declared.get("seatHeight")
     declared_total_height = declared.get("totalHeight")
     declared_footprint = declared.get("footprint")
-
-    if DEBUG_ASSERT:
-        print("[Ergonomics] Chair declared:", declared)
-        print("[Ergonomics] Chair measured:", measured)
 
     def _compare_metric(metric: str, measured_value: float, declared_value: float) -> None:
         delta = measured_value - declared_value
@@ -155,27 +153,81 @@ def _check_ergonomics(
                 f"declared={declared_value:.4f}, Δ={delta:.4f}"
             )
 
-    comparisons = []
-    if isinstance(declared_seat_height, (int, float)):
-        comparisons.append(("seatHeight", measured["seatHeight"], declared_seat_height))
-    if isinstance(declared_total_height, (int, float)):
-        comparisons.append(
-            ("totalHeight", measured["totalHeight"], declared_total_height)
-        )
-    if isinstance(declared_footprint, Mapping):
-        declared_width = declared_footprint.get("width")
-        declared_depth = declared_footprint.get("depth")
-        if isinstance(declared_width, (int, float)):
+    def _compare(measured: Mapping[str, object]) -> None:
+        comparisons = []
+        if isinstance(declared_seat_height, (int, float)):
             comparisons.append(
-                ("footprint.width", measured["footprint"]["width"], declared_width)
+                ("seatHeight", measured["seatHeight"], declared_seat_height)
             )
-        if isinstance(declared_depth, (int, float)):
+        if isinstance(declared_total_height, (int, float)):
             comparisons.append(
-                ("footprint.depth", measured["footprint"]["depth"], declared_depth)
+                ("totalHeight", measured["totalHeight"], declared_total_height)
             )
+        if isinstance(declared_footprint, Mapping):
+            declared_width = declared_footprint.get("width")
+            declared_depth = declared_footprint.get("depth")
+            if isinstance(declared_width, (int, float)):
+                comparisons.append(
+                    ("footprint.width", measured["footprint"]["width"], declared_width)
+                )
+            if isinstance(declared_depth, (int, float)):
+                comparisons.append(
+                    ("footprint.depth", measured["footprint"]["depth"], declared_depth)
+                )
 
-    for metric, measured_value, declared_value in comparisons:
-        _compare_metric(metric, measured_value, declared_value)
+        for metric, measured_value, declared_value in comparisons:
+            _compare_metric(metric, measured_value, declared_value)
+
+    def _apply_z_offset_to_part(
+        asset_id: str,
+        part_id: str,
+        delta_z: float,
+    ) -> None:
+        anchor_name = f"{asset_id}::{part_id}::ANCHOR"
+        anchor_obj = bpy.data.objects.get(anchor_name)
+        if anchor_obj is not None:
+            anchor_obj.location.z += delta_z
+            return
+        for obj in collection.objects:
+            if f"::{part_id}::" not in obj.name:
+                continue
+            obj.location.z += delta_z
+
+    measured_before = _measure_chair()
+    if measured_before is None:
+        return
+
+    if DEBUG_ASSERT:
+        print("[Ergonomics] Chair declared:", declared)
+        print("[Ergonomics] Chair measured:", measured_before)
+
+    if APPLY_ERGONOMICS:
+        seat_delta = 0.0
+        total_delta = 0.0
+        if isinstance(declared_seat_height, (int, float)):
+            seat_delta = declared_seat_height - measured_before["seatHeight"]
+            _apply_z_offset_to_part(asset_id, "seat", seat_delta)
+        if isinstance(declared_total_height, (int, float)):
+            total_delta = declared_total_height - measured_before["totalHeight"]
+            _apply_z_offset_to_part(asset_id, "back", total_delta)
+
+        measured_after = _measure_chair()
+        if measured_after is None:
+            return
+        if DEBUG_ASSERT:
+            print(
+                "[Ergonomics] Chair seatHeight corrected: "
+                f"{measured_before['seatHeight']:.4f} → {measured_after['seatHeight']:.4f}"
+            )
+            print(
+                "[Ergonomics] Chair totalHeight corrected: "
+                f"{measured_before['totalHeight']:.4f} → {measured_after['totalHeight']:.4f}"
+            )
+            print("[Ergonomics] Chair measured:", measured_after)
+        _compare(measured_after)
+        return
+
+    _compare(measured_before)
 
 
 def realise_chair(input_dict: Mapping[str, object]) -> None:
@@ -221,16 +273,72 @@ def realise_chair(input_dict: Mapping[str, object]) -> None:
         cube_mesh.from_pydata(vertices, [], faces)
         cube_mesh.update()
 
+    physical = input_dict.get("physical")
+
+    footprint_width: Optional[float] = None
+    footprint_depth: Optional[float] = None
+
+    def _get_number(value: object) -> Optional[float]:
+        if isinstance(value, (int, float)):
+            return float(value)
+        return None
+
+    seat_scale: Optional[Tuple[float, float, float]] = None
+    back_scale: Optional[Tuple[float, float, float]] = None
+    support_scale: Optional[Tuple[float, float, float]] = None
+    seat_height_value: Optional[float] = None
+    back_depth = 0.1
+
+    if isinstance(physical, Mapping):
+        footprint = physical.get("footprint")
+        seat_width = None
+        seat_depth = None
+        if isinstance(footprint, Mapping):
+            seat_width = _get_number(footprint.get("width"))
+            seat_depth = _get_number(footprint.get("depth"))
+            footprint_width = seat_width
+            footprint_depth = seat_depth
+        total_height = _get_number(physical.get("totalHeight"))
+        seat_height = _get_number(physical.get("seatHeight"))
+        seat_height_value = seat_height
+
+        if seat_width is not None and seat_depth is not None:
+            seat_scale = (seat_width, seat_depth, 0.05)
+        if seat_width is not None and total_height is not None:
+            back_scale = (seat_width * 0.5, 0.1, total_height * 0.8)
+        if seat_height is not None:
+            support_scale = (0.1, 0.1, seat_height)
+
     if REGEN_MODE == "replace":
         for obj in list(collection.objects):
             bpy.data.objects.remove(obj, do_unlink=True)
+
+    support_positions: Optional[list[Tuple[float, float]]] = None
+    if footprint_width is not None and footprint_depth is not None:
+        LEG_INSET = 0.03
+        support_positions = [
+            (-footprint_width / 2 + LEG_INSET, -footprint_depth / 2 + LEG_INSET),
+            (footprint_width / 2 - LEG_INSET, -footprint_depth / 2 + LEG_INSET),
+            (-footprint_width / 2 + LEG_INSET, footprint_depth / 2 - LEG_INSET),
+            (footprint_width / 2 - LEG_INSET, footprint_depth / 2 - LEG_INSET),
+        ]
 
     for index, part in enumerate(summary.parts):
         base_x = index * PART_SPACING
         base_y = 0.0
         base_z = 0.0
 
-        if part.id == "seat":
+        if footprint_width is not None and footprint_depth is not None:
+            if part.id == "seat":
+                base_x = 0.0
+                base_y = 0.0
+            elif part.id == "back":
+                base_x = 0.0
+                base_y = (footprint_depth / 2) + (back_depth / 2)
+            elif part.id == "supports" and support_positions is not None:
+                base_x = 0.0
+                base_y = 0.0
+        elif part.id == "seat":
             base_z = SEAT_HEIGHT
         elif part.id == "back":
             base_z = SEAT_HEIGHT
@@ -252,9 +360,29 @@ def realise_chair(input_dict: Mapping[str, object]) -> None:
             cube = bpy.data.objects.new(obj_name, cube_mesh)
             collection.objects.link(cube)
             offset_y = 0.0
-            if part.id == "supports":
+            if part.id == "supports" and support_positions is not None:
+                if sub_index < len(support_positions):
+                    offset_y = support_positions[sub_index][1]
+                    cube.location = (support_positions[sub_index][0], offset_y, 0.0)
+            elif part.id == "supports":
                 offset_y = sub_index * SUPPORT_SPACING
-            cube.location = (0.0, offset_y, 0.0)
+            offset_z = 0.0
+            if part.id == "seat" and seat_scale is not None:
+                cube.scale = seat_scale
+                if seat_height_value is not None:
+                    offset_z = seat_height_value + (seat_scale[2] / 2)
+                else:
+                    offset_z = -seat_scale[2] / 2
+            elif part.id == "back" and back_scale is not None:
+                cube.scale = back_scale
+                offset_z = back_scale[2] / 2
+            elif part.id == "supports" and support_scale is not None:
+                cube.scale = support_scale
+                offset_z = support_scale[2] / 2
+            if part.id != "supports" or support_positions is None:
+                cube.location = (0.0, offset_y, offset_z)
+            else:
+                cube.location = (cube.location.x, cube.location.y, offset_z)
             cube.parent = anchor
 
     _check_ergonomics(input_dict, collection)

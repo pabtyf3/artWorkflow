@@ -20,6 +20,7 @@
   },
   "scripts": {
     "validate": "ts-node tools/cli.ts",
-    "test": "jest"
+    "test": "jest",
+    "render:chair": "ts-node tools/blender-runner.ts"
   }
 }
