@@ -26,6 +26,7 @@ PART_OBJECT_COUNTS = {
     "supports": 4,
 }
 
+REALISER_TOLERANCE = 0.002  # 2mm structural clearance
 APPLY_ERGONOMICS = True
 TOLERANCE = 0.02
 DEBUG_ASSERT = False
@@ -277,6 +278,10 @@ def realise_chair(input_dict: Mapping[str, object]) -> None:
 
     footprint_width: Optional[float] = None
     footprint_depth: Optional[float] = None
+    seat_width_value: Optional[float] = None
+    seat_depth_value: Optional[float] = None
+    leg_thickness_value: Optional[float] = None
+    back_thickness_value: Optional[float] = None
 
     def _get_number(value: object) -> Optional[float]:
         if isinstance(value, (int, float)):
@@ -290,37 +295,72 @@ def realise_chair(input_dict: Mapping[str, object]) -> None:
     back_depth = 0.1
 
     if isinstance(physical, Mapping):
+        seat_width = _get_number(physical.get("seatWidth"))
+        seat_depth = _get_number(physical.get("seatDepth"))
+        seat_width_value = seat_width
+        seat_depth_value = seat_depth
         footprint = physical.get("footprint")
-        seat_width = None
-        seat_depth = None
         if isinstance(footprint, Mapping):
-            seat_width = _get_number(footprint.get("width"))
-            seat_depth = _get_number(footprint.get("depth"))
-            footprint_width = seat_width
-            footprint_depth = seat_depth
+            footprint_width = _get_number(footprint.get("width"))
+            footprint_depth = _get_number(footprint.get("depth"))
         total_height = _get_number(physical.get("totalHeight"))
         seat_height = _get_number(physical.get("seatHeight"))
         seat_height_value = seat_height
 
-        if seat_width is not None and seat_depth is not None:
-            seat_scale = (seat_width, seat_depth, 0.05)
-        if seat_width is not None and total_height is not None:
-            back_scale = (seat_width * 0.5, 0.1, total_height * 0.8)
-        if seat_height is not None:
-            support_scale = (0.1, 0.1, seat_height)
+        leg_thickness = None
+        if footprint_width is not None and seat_width is not None:
+            leg_thickness = (footprint_width - seat_width) / 2
+            leg_thickness_value = leg_thickness
+
+        seat_thickness = None
+        if seat_width is not None:
+            seat_thickness = seat_width * 0.08
+
+        back_width = None
+        back_thickness = None
+        back_height = None
+
+        if seat_width is not None:
+            back_width = seat_width * 0.9
+
+        if seat_thickness is not None:
+            back_thickness = seat_thickness * 0.8
+            back_thickness_value = back_thickness
+
+        if total_height is not None and seat_height is not None:
+            back_height = total_height - seat_height
+
+        if seat_width is not None and seat_depth is not None and seat_thickness is not None:
+            seat_scale = (seat_width, seat_depth, seat_thickness)
+        if leg_thickness is not None and seat_height is not None:
+            support_scale = (
+                leg_thickness,
+                leg_thickness,
+                seat_height - REALISER_TOLERANCE,
+            )
+        if back_width is not None and back_thickness is not None and back_height is not None:
+            back_scale = (back_width, back_thickness, back_height)
+            back_depth = back_thickness
 
     if REGEN_MODE == "replace":
         for obj in list(collection.objects):
             bpy.data.objects.remove(obj, do_unlink=True)
 
     support_positions: Optional[list[Tuple[float, float]]] = None
-    if footprint_width is not None and footprint_depth is not None:
-        LEG_INSET = 0.03
+    if (
+        seat_width_value is not None
+        and seat_depth_value is not None
+        and leg_thickness_value is not None
+    ):
+        half_seat_w = seat_width_value / 2
+        half_seat_d = seat_depth_value / 2
+        half_leg = leg_thickness_value / 2
+        LEG_INSET = seat_width_value * 0.015
         support_positions = [
-            (-footprint_width / 2 + LEG_INSET, -footprint_depth / 2 + LEG_INSET),
-            (footprint_width / 2 - LEG_INSET, -footprint_depth / 2 + LEG_INSET),
-            (-footprint_width / 2 + LEG_INSET, footprint_depth / 2 - LEG_INSET),
-            (footprint_width / 2 - LEG_INSET, footprint_depth / 2 - LEG_INSET),
+            (-half_seat_w + half_leg + LEG_INSET, -half_seat_d + half_leg + LEG_INSET),
+            (half_seat_w - half_leg - LEG_INSET, -half_seat_d + half_leg + LEG_INSET),
+            (-half_seat_w + half_leg + LEG_INSET, half_seat_d - half_leg - LEG_INSET),
+            (half_seat_w - half_leg - LEG_INSET, half_seat_d - half_leg - LEG_INSET),
         ]
 
     for index, part in enumerate(summary.parts):
@@ -328,13 +368,13 @@ def realise_chair(input_dict: Mapping[str, object]) -> None:
         base_y = 0.0
         base_z = 0.0
 
-        if footprint_width is not None and footprint_depth is not None:
+        if seat_depth_value is not None and back_thickness_value is not None:
             if part.id == "seat":
                 base_x = 0.0
                 base_y = 0.0
             elif part.id == "back":
                 base_x = 0.0
-                base_y = (footprint_depth / 2) + (back_depth / 2)
+                base_y = (seat_depth_value / 2) - (back_thickness_value / 2)
             elif part.id == "supports" and support_positions is not None:
                 base_x = 0.0
                 base_y = 0.0
