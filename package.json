@@ -21,6 +21,8 @@
   "scripts": {
     "validate": "ts-node tools/cli.ts",
     "test": "jest",
-    "render:chair": "ts-node tools/blender-runner.ts"
+    "render:chair": "ts-node tools/blender-runner.ts chair",
+    "render:table": "ts-node tools/blender-runner.ts table",
+    "render:bed": "ts-node tools/blender-runner.ts bed"
   }
 }

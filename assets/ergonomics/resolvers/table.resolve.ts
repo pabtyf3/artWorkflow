@@ -1,5 +1,5 @@
 import type { GeneratedTable } from "../../archetypes/table.generator";
-import type { ReferenceBody } from "../referenceBody.interface";
+import type { ReferenceBody } from "../standards/referenceBody.interface";
 import type { TablePhysicalResolution } from "../types/physicalResolution";
 
 import { computeFootprint } from "../internal/footprint";

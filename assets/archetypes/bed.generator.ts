@@ -16,7 +16,10 @@ export type GeneratedBed = {
   /**
    * Generated frame descriptor, if present in the input config.
    */
-  frame?: { kind: "frame"; type: BedArchetypeConfig["frame"]["type"] };
+  frame?: {
+    kind: "frame";
+    type: NonNullable<BedArchetypeConfig["frame"]>["type"];
+  };
 };
 
 /**

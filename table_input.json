@@ -1,0 +1,23 @@
+{
+  "assetId": "assets.furniture.table_simple",
+  "archetype": "table",
+  "detailTier": "basic",
+  "parts": {
+    "supports": {
+      "kind": "supports"
+    },
+    "surface": {
+      "kind": "surface"
+    }
+  },
+  "physical": {
+    "surfaceHeight": 0.73,
+    "surfaceWidth": 0.9,
+    "surfaceDepth": 0.488,
+    "clearanceHeight": 0.51,
+    "footprint": {
+      "width": 1.02,
+      "depth": 0.608
+    }
+  }
+}

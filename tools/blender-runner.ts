@@ -1,16 +1,62 @@
-import { writeFileSync } from "fs";
 import { spawnSync } from "child_process";
+import { writeFileSync } from "fs";
 import { resolve } from "path";
-import { generateChair } from "../assets/archetypes/chair.generator";
-import { chairBasicFixture } from "../assets/archetypes/fixtures/chair.basic.fixture";
+import type { AdapterInput } from "../assets/adapters/adapter-input.interface";
+import { buildBedAdapterInput } from "../assets/adapters/buildAdapterInput";
 import { buildChairAdapterInput } from "../assets/adapters/buildAdapterInput";
+import { buildTableAdapterInput } from "../assets/adapters/buildAdapterInput";
+import { generateBed } from "../assets/archetypes/bed.generator";
+import { generateChair } from "../assets/archetypes/chair.generator";
+import { generateTable } from "../assets/archetypes/table.generator";
+import { bedBasicFixture } from "../assets/archetypes/fixtures/bed.basic.fixture";
+import { chairBasicFixture } from "../assets/archetypes/fixtures/chair.basic.fixture";
+import { tableBasicFixture } from "../assets/archetypes/fixtures/table.basic.fixture";
 
-const inputPath = resolve(process.cwd(), "chair_input.json");
-const outputPath = resolve(process.cwd(), "chair_output.blend");
+type ArchetypeKey = "chair" | "table" | "bed";
 
-const intent = generateChair(chairBasicFixture);
-const adapterInput = buildChairAdapterInput({
-  assetId: "assets.furniture.chair_simple",
+type RegistryEntry = {
+  assetId: string;
+  generator: (fixture: any) => any;
+  fixture: any;
+  buildAdapter: (params: { assetId: string; intent: any }) => AdapterInput;
+};
+
+const ASSET_REGISTRY: Record<ArchetypeKey, RegistryEntry> = {
+  chair: {
+    assetId: "assets.furniture.chair_simple",
+    generator: generateChair,
+    fixture: chairBasicFixture,
+    buildAdapter: buildChairAdapterInput,
+  },
+  table: {
+    assetId: "assets.furniture.table_simple",
+    generator: generateTable,
+    fixture: tableBasicFixture,
+    buildAdapter: buildTableAdapterInput,
+  },
+  bed: {
+    assetId: "assets.furniture.bed_simple",
+    generator: generateBed,
+    fixture: bedBasicFixture,
+    buildAdapter: buildBedAdapterInput,
+  },
+};
+
+const requested = process.argv[2] as ArchetypeKey | undefined;
+const archetype: ArchetypeKey = requested ?? "chair";
+const entry = ASSET_REGISTRY[archetype];
+
+if (!entry) {
+  console.error(`Unsupported archetype: ${requested ?? "(none)"}.`);
+  process.exit(1);
+}
+
+const inputPath = resolve(process.cwd(), `${archetype}_input.json`);
+const outputPath = resolve(process.cwd(), `${archetype}_output.blend`);
+
+const intent = entry.generator(entry.fixture) as unknown;
+const adapterInput = entry.buildAdapter({
+  assetId: entry.assetId,
   intent,
 });
 
@@ -41,9 +87,6 @@ const result = spawnSync(
     env,
   }
 );
-
-
-
 
 if (result.error) {
   console.error("Failed to launch Blender", result.error);

@@ -1,5 +1,5 @@
 import type { GeneratedBed } from "../../archetypes/bed.generator";
-import type { ReferenceBody } from "../referenceBody.interface";
+import type { ReferenceBody } from "../standards/referenceBody.interface";
 import type { BedPhysicalResolution } from "../types/physicalResolution";
 
 import { computeFootprint } from "../internal/footprint";

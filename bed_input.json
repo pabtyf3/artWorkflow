@@ -1,0 +1,25 @@
+{
+  "assetId": "assets.furniture.bed_simple",
+  "archetype": "bed",
+  "detailTier": "basic",
+  "parts": {
+    "sleepSurface": {
+      "kind": "sleepSurface"
+    },
+    "frame": {
+      "kind": "frame"
+    }
+  },
+  "physical": {
+    "sleepingHeight": 0.4,
+    "sleepingWidth": 0.81,
+    "sleepingLength": 1.95,
+    "mattressThickness": 0.22,
+    "clearanceUnder": 0.18,
+    "totalHeight": 0.4,
+    "footprint": {
+      "width": 0.93,
+      "depth": 2.07
+    }
+  }
+}

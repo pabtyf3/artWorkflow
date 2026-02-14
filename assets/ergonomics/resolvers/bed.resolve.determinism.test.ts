@@ -1,6 +1,6 @@
 import { generateBed } from "../../archetypes/bed.generator";
 import { bedBasicFixture } from "../../archetypes/fixtures/bed.basic.fixture";
-import { baseHumanReference } from "../baseHumanReference";
+import { baseHumanReference } from "../standards/baseHumanReference";
 import { resolveBedPhysical } from "./bed.resolve";
 
 describe("bed physical resolution determinism", () => {

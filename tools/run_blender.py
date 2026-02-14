@@ -34,11 +34,28 @@ def main() -> None:
     with open(input_path, "r", encoding="utf-8") as handle:
         adapter_input = json.load(handle)
 
+    from interpreters.blender.runtime.python.blender_bed_realiser import (
+        realise_bed,
+    )
     from interpreters.blender.runtime.python.blender_chair_realiser import (
         realise_chair,
     )
+    from interpreters.blender.runtime.python.blender_table_realiser import (
+        realise_table,
+    )
 
-    realise_chair(adapter_input)
+    REALISER_REGISTRY = {
+        "chair": realise_chair,
+        "table": realise_table,
+        "bed": realise_bed,
+    }
+
+    archetype = adapter_input.get("archetype")
+    realiser = REALISER_REGISTRY.get(archetype)
+    if not realiser:
+        raise RuntimeError(f"Unsupported archetype: {archetype}")
+
+    realiser(adapter_input)
 
     bpy.ops.wm.save_mainfile(filepath=output_path)
 

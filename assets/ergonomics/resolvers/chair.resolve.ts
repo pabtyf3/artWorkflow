@@ -1,5 +1,5 @@
 import type { GeneratedChair } from "../../archetypes/chair.generator";
-import type { ReferenceBody } from "../referenceBody.interface";
+import type { ReferenceBody } from "../standards/referenceBody.interface";
 import type { ChairPhysicalResolution } from "../types/physicalResolution";
 
 import { computeFootprint } from "../internal/footprint";

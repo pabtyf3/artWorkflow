@@ -1,7 +1,7 @@
 import type { GeneratedChair } from "../archetypes/chair.generator";
 import type { GeneratedBed } from "../archetypes/bed.generator";
 import type { GeneratedTable } from "../archetypes/table.generator";
-import type { ReferenceBody } from "./referenceBody.interface";
+import type { ReferenceBody } from "./standards/referenceBody.interface";
 import type {
   BedPhysicalResolution,
   ChairPhysicalResolution,

@@ -1,6 +1,6 @@
 import { generateTable } from "../../archetypes/table.generator";
 import { tableBasicFixture } from "../../archetypes/fixtures/table.basic.fixture";
-import { baseHumanReference } from "../baseHumanReference";
+import { baseHumanReference } from "../standards/baseHumanReference";
 import { resolveTablePhysical } from "./table.resolve";
 
 describe("table physical resolution determinism", () => {
